@@ -77,6 +77,8 @@ function App() {
     return norwegianPhoneRegex.test(phone);
   };
 
+  const isPhoneValid = validateNorwegianPhone(formData.phone);
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -158,13 +160,20 @@ function App() {
                   value={formData.phone}
                   onChange={handleChange}
                   name="phone"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                    formData.phone && !isPhoneValid ? "border-red-500" : ""
+                  }`}
                   placeholder="+47 XXXXXXXX"
                   required
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   Format: +47 XXXXXXXX
                 </p>
+                {formData.phone && !isPhoneValid && (
+                  <p className="mt-1 text-sm text-red-500">
+                    Please enter a valid Norwegian phone number
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -259,8 +268,13 @@ function App() {
               )}
               <button
                 type="submit"
+                disabled={currentStep === 2 && !isPhoneValid}
                 className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
                   currentStep === 1 ? "ml-auto" : ""
+                } ${
+                  currentStep === 2 && !isPhoneValid
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                 }`}
               >
                 {currentStep === totalSteps ? "Complete Sign Up" : "Next"}
