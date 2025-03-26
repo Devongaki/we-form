@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import InputMask from "react-input-mask";
+import LandingPage from "./components/LandingPage";
 
 function App() {
+  const [showForm, setShowForm] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
@@ -222,12 +224,16 @@ function App() {
     }
   };
 
+  if (!showForm) {
+    return <LandingPage onStart={() => setShowForm(true)} />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="max-w-md mx-auto px-4 py-6">
+        <div className="bg-white rounded-lg shadow-xl p-6">
           {/* Progress Bar */}
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex justify-between mb-2">
               {[...Array(totalSteps)].map((_, index) => (
                 <div
