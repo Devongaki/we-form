@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import InputMask from "react-input-mask";
 import LandingPage from "./components/LandingPage";
+import Confetti from "react-confetti";
 
 function App() {
   const [showForm, setShowForm] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCountry, setSelectedCountry] = useState("NO");
+  const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -15,17 +17,34 @@ function App() {
 
   const [isNameValid, setIsNameValid] = useState(false);
 
-  // Check for name in URL when component mounts
+  // Enhanced URL parameter handling
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const nameFromUrl = urlParams.get("name");
-    if (nameFromUrl) {
-      setFormData((prev) => ({
-        ...prev,
-        name: decodeURIComponent(nameFromUrl),
-      }));
-      setIsNameValid(nameFromUrl.length >= 3);
-      setShowForm(true);
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const nameFromUrl = urlParams.get("name");
+
+      if (nameFromUrl) {
+        // Properly decode the name from URL
+        const decodedName = decodeURIComponent(nameFromUrl.replace(/\+/g, " "));
+
+        // Clean the name - remove extra spaces and special characters
+        const cleanedName = decodedName
+          .trim()
+          .replace(/\s+/g, " ") // Replace multiple spaces with single space
+          .replace(/[^\w\s\-']/g, ""); // Allow only letters, numbers, spaces, hyphens, and apostrophes
+
+        if (cleanedName) {
+          setFormData((prev) => ({
+            ...prev,
+            name: cleanedName,
+          }));
+          setIsNameValid(cleanedName.length >= 3);
+          setShowForm(true);
+          setCurrentStep(1); // Ensure we start at the name step
+        }
+      }
+    } catch (error) {
+      console.error("Error processing URL parameters:", error);
     }
   }, []);
 
@@ -56,17 +75,30 @@ function App() {
 
   const handlePhoneChange = (e) => {
     const { value } = e.target;
+    // Remove any non-digit characters for validation
+    const digitsOnly = value.replace(/\D/g, "");
+    const selectedPrefix = countries.find(
+      (c) => c.code === selectedCountry
+    ).prefix;
+
     setFormData((prev) => ({
       ...prev,
-      phone: value,
+      phone: digitsOnly ? `${selectedPrefix} ${digitsOnly}` : "",
     }));
   };
 
   const validatePhone = (phone) => {
+    if (!phone) return false;
+    // Remove any non-digit characters for validation
+    const digitsOnly = phone.replace(/\D/g, "");
     const country = countries.find((c) => c.code === selectedCountry);
-    const phoneRegex =
-      country.code === "NO" ? /^\+47\s*[0-9]{8}$/ : /^\+46\s*[0-9]{9}$/;
-    return phoneRegex.test(phone);
+    // Check if the number has the correct length after removing the prefix
+    const numberWithoutPrefix = digitsOnly.slice(
+      country.prefix.replace("+", "").length
+    );
+    return country.code === "NO"
+      ? numberWithoutPrefix.length === 8
+      : numberWithoutPrefix.length === 9;
   };
 
   const isPhoneValid = validatePhone(formData.phone);
@@ -113,7 +145,11 @@ function App() {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      console.log("Form submitted:", formData);
+      // Ensure a fitness goal is selected before showing success
+      if (formData.fitnessGoal) {
+        console.log("Form submitted:", formData);
+        setShowSuccess(true);
+      }
     }
   };
 
@@ -129,15 +165,15 @@ function App() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-2xl font-bold text-white mb-2">
                 Welcome to WE Fitness
               </h3>
-              <p className="mt-2 text-gray-600">Let's start with your name</p>
+              <p className="text-blue-100">Let's start with your name</p>
             </div>
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-white/90 mb-1"
               >
                 Your Name
               </label>
@@ -147,15 +183,15 @@ function App() {
                 name="name"
                 value={formData.name}
                 onChange={handleNameChange}
-                className={`block w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 text-gray-700 bg-white shadow-sm ${
+                className={`block w-full px-4 py-3 rounded-xl border transition-all duration-200 bg-white/5 text-white placeholder-white/50 ${
                   formData.name && !isNameValid
-                    ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                    : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    ? "border-red-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/20"
+                    : "border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
                 }`}
                 required
               />
               {formData.name && !isNameValid && (
-                <p className="mt-1 text-sm text-red-500">
+                <p className="mt-1 text-sm text-red-400">
                   Name must be at least 3 characters long
                 </p>
               )}
@@ -166,16 +202,16 @@ function App() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-2xl font-bold text-white mb-2">
                 Contact Details
               </h3>
-              <p className="mt-2 text-gray-600">How can we reach you?</p>
+              <p className="text-blue-100">How can we reach you?</p>
             </div>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-white/90 mb-1"
                 >
                   Email Address
                 </label>
@@ -185,7 +221,7 @@ function App() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder-gray-400 text-gray-700 bg-white shadow-sm"
+                  className="block w-full px-4 py-3 rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-200 bg-white/5 text-white placeholder-white/50"
                   placeholder="you@example.com"
                   required
                 />
@@ -193,15 +229,15 @@ function App() {
               <div>
                 <label
                   htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-white/90 mb-1"
                 >
                   Phone Number
                 </label>
-                <div className="flex gap-2">
+                <div className="relative flex gap-2">
                   <select
                     value={selectedCountry}
                     onChange={handleCountryChange}
-                    className="w-24 px-2 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-700 bg-white shadow-sm"
+                    className="w-24 px-2 py-3 rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-200 bg-white/5 text-white"
                   >
                     {countries.map((country) => (
                       <option key={country.code} value={country.code}>
@@ -209,24 +245,34 @@ function App() {
                       </option>
                     ))}
                   </select>
-                  <InputMask
-                    mask={selectedCountry === "NO" ? "99999999" : "999999999"}
-                    value={formData.phone.replace(/^\+\d+\s*/, "")}
-                    onChange={handlePhoneChange}
-                    className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all duration-200 placeholder-gray-400 text-gray-700 bg-white shadow-sm ${
-                      formData.phone && !isPhoneValid
-                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                        : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    }`}
-                    placeholder={
-                      selectedCountry === "NO" ? "XXXXXXXX" : "XXXXXXXXX"
-                    }
-                    required
-                  />
+                  <div className="relative flex-1">
+                    <InputMask
+                      mask={
+                        selectedCountry === "NO"
+                          ? "99 99 99 99"
+                          : "99 999 99 99"
+                      }
+                      maskChar={null}
+                      value={formData.phone.replace(/^\+\d+\s*/, "")}
+                      onChange={handlePhoneChange}
+                      className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 bg-white/5 text-white placeholder-white/50 ${
+                        formData.phone && !isPhoneValid
+                          ? "border-red-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/20"
+                          : "border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
+                      }`}
+                      placeholder={
+                        selectedCountry === "NO"
+                          ? "XX XX XX XX"
+                          : "XX XXX XX XX"
+                      }
+                    />
+                  </div>
                 </div>
                 {formData.phone && !isPhoneValid && (
-                  <p className="mt-1 text-sm text-red-500">
-                    Please enter a valid phone number
+                  <p className="mt-1 text-sm text-red-400">
+                    Please enter a valid{" "}
+                    {selectedCountry === "NO" ? "8-digit" : "9-digit"} phone
+                    number
                   </p>
                 )}
               </div>
@@ -237,10 +283,10 @@ function App() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-2xl font-bold text-white mb-2">
                 Your Fitness Goal
               </h3>
-              <p className="mt-2 text-gray-600">What do you want to achieve?</p>
+              <p className="text-blue-100">What do you want to achieve?</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {fitnessGoals.map((goal) => (
@@ -250,26 +296,25 @@ function App() {
                   onClick={() =>
                     setFormData((prev) => ({ ...prev, fitnessGoal: goal.id }))
                   }
-                  className={`p-4 rounded-lg border-2 text-center transition-all transform hover:scale-105 ${
+                  className={`p-4 rounded-xl border-2 text-center transition-all transform hover:scale-105 ${
                     formData.fitnessGoal === goal.id
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-200 hover:border-blue-300"
+                      ? "border-blue-400 bg-blue-600/20 text-white"
+                      : "border-white/10 hover:border-blue-400/50 text-white"
                   }`}
                 >
                   <span className="text-2xl mb-2 block">{goal.icon}</span>
                   <span className="font-medium block">{goal.title}</span>
-                  <span className="text-sm text-gray-600 mt-1 block">
+                  <span className="text-sm text-blue-100 mt-1 block">
                     {goal.description}
                   </span>
                 </button>
               ))}
             </div>
-            <input
-              type="hidden"
-              name="fitnessGoal"
-              value={formData.fitnessGoal}
-              required
-            />
+            {!formData.fitnessGoal && (
+              <p className="text-sm text-red-400 text-center">
+                Please select a fitness goal to continue
+              </p>
+            )}
           </div>
         );
       default:
@@ -277,73 +322,141 @@ function App() {
     }
   };
 
+  if (showSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 relative overflow-hidden">
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={false}
+          numberOfPieces={500}
+          gravity={0.2}
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="max-w-md w-full mx-4">
+            <div className="bg-white rounded-2xl shadow-xl p-8 text-center transform animate-fade-in-up">
+              <div className="mb-6">
+                <span className="inline-block p-3 bg-green-100 rounded-full text-green-500 text-4xl">
+                  ✓
+                </span>
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Welcome to the WE Fitness Team!
+              </h2>
+              <p className="text-gray-600 mb-8">
+                Congratulations {formData.name}! 🎉 We're excited to have you
+                join our fitness community. Get ready to transform your life and
+                achieve your fitness goals!
+              </p>
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <p className="text-blue-800 font-medium">
+                    Your Selected Goal
+                  </p>
+                  <p className="text-blue-600">
+                    {
+                      fitnessGoals.find(
+                        (goal) => goal.id === formData.fitnessGoal
+                      )?.title
+                    }
+                  </p>
+                </div>
+                <p className="text-sm text-gray-500">
+                  We'll be in touch shortly with your personalized fitness plan!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!showForm) {
     return <LandingPage onStart={() => setShowForm(true)} />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="max-w-md mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow-xl p-6">
-          {/* Progress Bar */}
-          <div className="mb-6">
-            <div className="flex justify-between mb-2">
-              {[...Array(totalSteps)].map((_, index) => (
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background with overlay */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80')",
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-800/85 to-indigo-900/90"></div>
+      </div>
+
+      {/* Content */}
+      <div className="relative min-h-screen flex items-center justify-center px-4 py-6">
+        <div className="max-w-md w-full">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+            {/* Decorative elements */}
+            <div className="absolute -top-4 -left-4 w-20 h-20 bg-blue-500/20 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-indigo-500/20 rounded-full blur-2xl"></div>
+
+            {/* Progress Bar */}
+            <div className="mb-8">
+              <div className="flex justify-between mb-2">
+                {[...Array(totalSteps)].map((_, index) => (
+                  <div
+                    key={index + 1}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                      currentStep >= index + 1
+                        ? "bg-blue-600/90 border-blue-400 text-white"
+                        : "bg-white/10 border-white/20 text-white/60"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                ))}
+              </div>
+              <div className="relative">
+                <div className="absolute top-0 left-0 h-1 bg-white/10 w-full rounded-full"></div>
                 <div
-                  key={index + 1}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    currentStep >= index + 1
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-600"
+                  className="absolute top-0 left-0 h-1 bg-blue-500 rounded-full transition-all duration-300"
+                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Form Content */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-6">{renderStep()}</div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between pt-6">
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="px-6 py-3 text-sm font-medium text-white/90 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-200"
+                  >
+                    Back
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={
+                    (currentStep === 1 && !isNameValid) ||
+                    (currentStep === 3 && !formData.fitnessGoal)
+                  }
+                  className={`px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                    currentStep === 1 ? "ml-auto" : ""
+                  } ${
+                    (currentStep === 1 && !isNameValid) ||
+                    (currentStep === 3 && !formData.fitnessGoal)
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }`}
                 >
-                  {index + 1}
-                </div>
-              ))}
-            </div>
-            <div className="relative">
-              <div className="absolute top-0 left-0 h-1 bg-gray-200 w-full rounded-full"></div>
-              <div
-                className="absolute top-0 left-0 h-1 bg-blue-600 rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Form Content */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {renderStep()}
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between pt-6">
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-                >
-                  Back
+                  {currentStep === totalSteps ? "Complete Sign Up" : "Next"}
                 </button>
-              )}
-              <button
-                type="submit"
-                disabled={
-                  (currentStep === 1 && !isNameValid) ||
-                  (currentStep === 2 && !isPhoneValid)
-                }
-                className={`px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
-                  currentStep === 1 ? "ml-auto" : ""
-                } ${
-                  (currentStep === 1 && !isNameValid) ||
-                  (currentStep === 2 && !isPhoneValid)
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
-              >
-                {currentStep === totalSteps ? "Complete Sign Up" : "Next"}
-              </button>
-            </div>
-          </form>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
