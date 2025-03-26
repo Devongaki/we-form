@@ -14,73 +14,25 @@ function App() {
   });
 
   const [isNameValid, setIsNameValid] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+
+  // Check for name in URL when component mounts
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const nameFromUrl = urlParams.get("name");
+    if (nameFromUrl) {
+      setFormData((prev) => ({
+        ...prev,
+        name: decodeURIComponent(nameFromUrl),
+      }));
+      setIsNameValid(nameFromUrl.length >= 3);
+      setShowForm(true);
+    }
+  }, []);
 
   const countries = [
     { code: "NO", name: "Norway", prefix: "+47" },
     { code: "SE", name: "Sweden", prefix: "+46" },
   ];
-
-  // Instagram OAuth configuration
-  const INSTAGRAM_CLIENT_ID = process.env.REACT_APP_INSTAGRAM_CLIENT_ID;
-  const REDIRECT_URI = window.location.origin + "/instagram-callback";
-
-  const handleInstagramLogin = () => {
-    if (
-      !INSTAGRAM_CLIENT_ID ||
-      INSTAGRAM_CLIENT_ID === "your_actual_instagram_client_id_here"
-    ) {
-      setError(
-        "Instagram integration is not properly configured. Please check your Instagram Client ID."
-      );
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=user_profile,user_media&response_type=code`;
-    window.location.href = authUrl;
-  };
-
-  const handleInstagramCallback = async (code) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const response = await fetch("https://api.instagram.com/v1/users/self", {
-        headers: {
-          Authorization: `Bearer ${code}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const instagramName = data.data.full_name || data.data.username;
-        setFormData((prev) => ({
-          ...prev,
-          name: instagramName,
-        }));
-        setIsNameValid(instagramName.length >= 3);
-      } else {
-        throw new Error("Failed to fetch Instagram user data");
-      }
-    } catch (error) {
-      console.error("Error fetching Instagram data:", error);
-      setError(
-        "Failed to fetch your Instagram name. Please try again or enter your name manually."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-    if (code) {
-      handleInstagramCallback(code);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
 
   const handleNameChange = (e) => {
     const { value } = e.target;
@@ -189,37 +141,24 @@ function App() {
               >
                 Your Name
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleNameChange}
-                  className={`block w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 text-gray-700 bg-white shadow-sm ${
-                    formData.name && !isNameValid
-                      ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                      : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                  }`}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={handleInstagramLogin}
-                  disabled={isLoading}
-                  className={`absolute right-3 top-3 text-sm text-blue-600 hover:text-blue-700 font-medium ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {isLoading ? "Loading..." : "Auto-fill"}
-                </button>
-              </div>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleNameChange}
+                className={`block w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 text-gray-700 bg-white shadow-sm ${
+                  formData.name && !isNameValid
+                    ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                    : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                }`}
+                required
+              />
               {formData.name && !isNameValid && (
                 <p className="mt-1 text-sm text-red-500">
                   Name must be at least 3 characters long
                 </p>
               )}
-              {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
             </div>
           </div>
         );
