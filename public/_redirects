@@ -1,6 +1,9 @@
 # Handle client-side routing
 /* /index.html 200
 
+# Instagram OAuth callback
+/instagram-callback /index.html 200
+
 # Security headers
 /*
   X-Frame-Options: DENY

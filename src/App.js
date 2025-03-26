@@ -5,12 +5,57 @@ import LandingPage from "./components/LandingPage";
 function App() {
   const [showForm, setShowForm] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedCountry, setSelectedCountry] = useState("NO");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     fitnessGoal: "",
   });
+
+  const [isNameValid, setIsNameValid] = useState(false);
+
+  const countries = [
+    { code: "NO", name: "Norway", prefix: "+47" },
+    { code: "SE", name: "Sweden", prefix: "+46" },
+  ];
+
+  const handleNameChange = (e) => {
+    const { value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      name: value,
+    }));
+    setIsNameValid(value.length >= 3);
+  };
+
+  const handleCountryChange = (e) => {
+    const country = countries.find((c) => c.code === e.target.value);
+    setSelectedCountry(country.code);
+    // Update phone number with new prefix
+    const currentNumber = formData.phone.replace(/^\+\d+\s*/, "");
+    setFormData((prev) => ({
+      ...prev,
+      phone: `${country.prefix} ${currentNumber}`,
+    }));
+  };
+
+  const handlePhoneChange = (e) => {
+    const { value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      phone: value,
+    }));
+  };
+
+  const validatePhone = (phone) => {
+    const country = countries.find((c) => c.code === selectedCountry);
+    const phoneRegex =
+      country.code === "NO" ? /^\+47\s*[0-9]{8}$/ : /^\+46\s*[0-9]{9}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const isPhoneValid = validatePhone(formData.phone);
 
   const totalSteps = 3;
 
@@ -49,15 +94,6 @@ function App() {
     }));
   };
 
-  const handleInstagramFill = () => {
-    // In a real app, this would be replaced with actual Instagram OAuth
-    // For demo purposes, we'll just set a placeholder name
-    setFormData((prevState) => ({
-      ...prevState,
-      name: "Instagram User",
-    }));
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (currentStep < totalSteps) {
@@ -73,14 +109,6 @@ function App() {
     }
   };
 
-  const validateNorwegianPhone = (phone) => {
-    // Norwegian phone number validation regex
-    const norwegianPhoneRegex = /^\+47[0-9]{8}$/;
-    return norwegianPhoneRegex.test(phone);
-  };
-
-  const isPhoneValid = validateNorwegianPhone(formData.phone);
-
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -95,29 +123,28 @@ function App() {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Your Name
               </label>
-              <div className="mt-1 flex rounded-md shadow-sm">
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Enter your name"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={handleInstagramFill}
-                  className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-                >
-                  <span className="text-sm">Fill from Instagram</span>
-                </button>
-              </div>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleNameChange}
+                className={`block w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 text-gray-700 bg-white shadow-sm ${
+                  formData.name && !isNameValid
+                    ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                    : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                }`}
+                required
+              />
+              {formData.name && !isNameValid && (
+                <p className="mt-1 text-sm text-red-500">
+                  Name must be at least 3 characters long
+                </p>
+              )}
             </div>
           </div>
         );
@@ -134,7 +161,7 @@ function App() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Email Address
                 </label>
@@ -144,7 +171,7 @@ function App() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder-gray-400 text-gray-700 bg-white shadow-sm"
                   placeholder="you@example.com"
                   required
                 />
@@ -152,28 +179,40 @@ function App() {
               <div>
                 <label
                   htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Norwegian Phone Number
+                  Phone Number
                 </label>
-                <InputMask
-                  mask="+47 99999999"
-                  maskChar={null}
-                  value={formData.phone}
-                  onChange={handleChange}
-                  name="phone"
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                    formData.phone && !isPhoneValid ? "border-red-500" : ""
-                  }`}
-                  placeholder="+47 XXXXXXXX"
-                  required
-                />
-                <p className="mt-1 text-sm text-gray-500">
-                  Format: +47 XXXXXXXX
-                </p>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedCountry}
+                    onChange={handleCountryChange}
+                    className="w-24 px-2 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-700 bg-white shadow-sm"
+                  >
+                    {countries.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.prefix}
+                      </option>
+                    ))}
+                  </select>
+                  <InputMask
+                    mask={selectedCountry === "NO" ? "99999999" : "999999999"}
+                    value={formData.phone.replace(/^\+\d+\s*/, "")}
+                    onChange={handlePhoneChange}
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all duration-200 placeholder-gray-400 text-gray-700 bg-white shadow-sm ${
+                      formData.phone && !isPhoneValid
+                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    }`}
+                    placeholder={
+                      selectedCountry === "NO" ? "XXXXXXXX" : "XXXXXXXXX"
+                    }
+                    required
+                  />
+                </div>
                 {formData.phone && !isPhoneValid && (
                   <p className="mt-1 text-sm text-red-500">
-                    Please enter a valid Norwegian phone number
+                    Please enter a valid phone number
                   </p>
                 )}
               </div>
@@ -267,18 +306,22 @@ function App() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                 >
                   Back
                 </button>
               )}
               <button
                 type="submit"
-                disabled={currentStep === 2 && !isPhoneValid}
-                className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                disabled={
+                  (currentStep === 1 && !isNameValid) ||
+                  (currentStep === 2 && !isPhoneValid)
+                }
+                className={`px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
                   currentStep === 1 ? "ml-auto" : ""
                 } ${
-                  currentStep === 2 && !isPhoneValid
+                  (currentStep === 1 && !isNameValid) ||
+                  (currentStep === 2 && !isPhoneValid)
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }`}
