@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import InputMask from "react-input-mask";
 import LandingPage from "./components/LandingPage";
 import Confetti from "react-confetti";
+import { db } from "./firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 function App() {
   const [showForm, setShowForm] = useState(false);
@@ -16,6 +18,8 @@ function App() {
   });
 
   const [isNameValid, setIsNameValid] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   // Enhanced URL parameter handling
   useEffect(() => {
@@ -140,15 +144,44 @@ function App() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Ensure a fitness goal is selected before showing success
-      if (formData.fitnessGoal) {
-        console.log("Form submitted:", formData);
+      try {
+        setIsSubmitting(true);
+        setSubmitError(null);
+
+        // Add timestamp and format the phone number
+        const submissionData = {
+          ...formData,
+          phone: `${
+            countries.find((c) => c.code === selectedCountry).prefix
+          } ${formData.phone.replace(/^\+\d+\s*/, "")}`,
+          submittedAt: serverTimestamp(),
+          fitnessGoalDetails: fitnessGoals.find(
+            (goal) => goal.id === formData.fitnessGoal
+          ),
+        };
+
+        console.log("Attempting to submit form data:", submissionData);
+
+        // Save to Firebase
+        const docRef = await addDoc(
+          collection(db, "submissions"),
+          submissionData
+        );
+
+        console.log("Form submitted successfully! Document ID:", docRef.id);
         setShowSuccess(true);
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        setSubmitError(
+          "There was an error submitting your form. Please try again."
+        );
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -315,12 +348,67 @@ function App() {
                 Please select a fitness goal to continue
               </p>
             )}
+            {submitError && (
+              <p className="text-sm text-red-400 text-center mt-4">
+                {submitError}
+              </p>
+            )}
           </div>
         );
       default:
         return null;
     }
   };
+
+  const renderSubmitButton = () => (
+    <button
+      type="submit"
+      disabled={
+        (currentStep === 1 && !isNameValid) ||
+        (currentStep === 3 && !formData.fitnessGoal) ||
+        isSubmitting
+      }
+      className={`px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-300 transform hover:scale-105 shadow-lg ${
+        currentStep === 1 ? "ml-auto" : ""
+      } ${
+        (currentStep === 1 && !isNameValid) ||
+        (currentStep === 3 && !formData.fitnessGoal) ||
+        isSubmitting
+          ? "opacity-50 cursor-not-allowed"
+          : ""
+      }`}
+    >
+      {isSubmitting ? (
+        <span className="flex items-center">
+          <svg
+            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          Submitting...
+        </span>
+      ) : currentStep === totalSteps ? (
+        "Complete Sign Up"
+      ) : (
+        "Next"
+      )}
+    </button>
+  );
 
   if (showSuccess) {
     return (
@@ -432,28 +520,13 @@ function App() {
                   <button
                     type="button"
                     onClick={handleBack}
+                    disabled={isSubmitting}
                     className="px-6 py-3 text-sm font-medium text-white/90 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-200"
                   >
                     Back
                   </button>
                 )}
-                <button
-                  type="submit"
-                  disabled={
-                    (currentStep === 1 && !isNameValid) ||
-                    (currentStep === 3 && !formData.fitnessGoal)
-                  }
-                  className={`px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-300 transform hover:scale-105 shadow-lg ${
-                    currentStep === 1 ? "ml-auto" : ""
-                  } ${
-                    (currentStep === 1 && !isNameValid) ||
-                    (currentStep === 3 && !formData.fitnessGoal)
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
-                >
-                  {currentStep === totalSteps ? "Complete Sign Up" : "Next"}
-                </button>
+                {renderSubmitButton()}
               </div>
             </form>
           </div>
