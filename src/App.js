@@ -5,9 +5,6 @@ import Confetti from "react-confetti";
 import { db } from "./firebase";
 import { collection, addDoc } from "firebase/firestore";
 import "./App.css";
-import Form from "./components/Form";
-import SuccessScreen from "./components/SuccessScreen";
-import confetti from "canvas-confetti";
 
 function App() {
   const [showForm, setShowForm] = useState(false);
@@ -300,6 +297,8 @@ function App() {
                       maskChar={null}
                       value={formData.phone.replace(/^\+\d+\s*/, "")}
                       onChange={handlePhoneChange}
+                      inputMode="numeric"
+                      type="tel"
                       className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 bg-white/5 text-white placeholder-white/50 ${
                         formData.phone && !isPhoneValid
                           ? "border-red-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/20"
