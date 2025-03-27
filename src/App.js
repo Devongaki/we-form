@@ -147,6 +147,14 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // If not on the last step, proceed to next step
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+      return;
+    }
+
+    // If on the last step, submit the form
     setIsSubmitting(true);
     setSubmitError(null);
 
