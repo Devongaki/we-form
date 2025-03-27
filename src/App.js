@@ -217,6 +217,36 @@ function App() {
     }
   };
 
+  const handleStartJourney = async () => {
+    try {
+      // Try to get Instagram data if available
+      const urlParams = new URLSearchParams(window.location.search);
+      const nameFromUrl = urlParams.get("name");
+
+      if (nameFromUrl) {
+        // Properly decode the name from URL
+        const decodedName = decodeURIComponent(nameFromUrl.replace(/\+/g, " "));
+        // Clean the name
+        const cleanedName = decodedName
+          .trim()
+          .replace(/\s+/g, " ")
+          .replace(/[^\w\s\-']/g, "");
+
+        if (cleanedName) {
+          setFormData((prev) => ({
+            ...prev,
+            name: cleanedName,
+          }));
+          setIsNameValid(cleanedName.length >= 3);
+        }
+      }
+      setShowForm(true);
+    } catch (error) {
+      console.error("Error processing URL parameters:", error);
+      setShowForm(true); // Show form anyway even if there's an error
+    }
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -488,7 +518,7 @@ function App() {
   }
 
   if (!showForm) {
-    return <LandingPage onStart={() => setShowForm(true)} />;
+    return <LandingPage onStart={handleStartJourney} />;
   }
 
   return (
