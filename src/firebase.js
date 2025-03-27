@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -13,9 +13,17 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const analytics = getAnalytics(app);
+// Check if we have the minimum required configuration
+const hasRequiredConfig = firebaseConfig.apiKey && firebaseConfig.projectId;
 
-export { db, analytics };
+// Initialize Firebase only if we have the required configuration
+const app = hasRequiredConfig ? initializeApp(firebaseConfig) : null;
+const db = hasRequiredConfig ? getFirestore(app) : null;
+
+// Initialize Analytics only if we're in a browser environment and have config
+let analytics = null;
+if (hasRequiredConfig && typeof window !== "undefined") {
+  isSupported().then((yes) => yes && (analytics = getAnalytics(app)));
+}
+
+export { app, db, analytics };

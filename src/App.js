@@ -146,43 +146,51 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      try {
-        setIsSubmitting(true);
-        setSubmitError(null);
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-        // Add timestamp and format the phone number
-        const submissionData = {
-          ...formData,
-          phone: `${
-            countries.find((c) => c.code === selectedCountry).prefix
-          } ${formData.phone.replace(/^\+\d+\s*/, "")}`,
-          submittedAt: serverTimestamp(),
-          fitnessGoalDetails: fitnessGoals.find(
-            (goal) => goal.id === formData.fitnessGoal
-          ),
-        };
+    try {
+      // Format phone number to remove any non-digit characters
+      const formattedPhone = formData.phone.replace(/\D/g, "");
 
-        console.log("Attempting to submit form data:", submissionData);
+      const submissionData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formattedPhone,
+        fitnessGoal: formData.fitnessGoal,
+        fitnessGoalDetails: fitnessGoals.find(
+          (goal) => goal.id === formData.fitnessGoal
+        ),
+        submittedAt: new Date(),
+      };
 
-        // Save to Firebase
-        const docRef = await addDoc(
-          collection(db, "submissions"),
-          submissionData
+      console.log("Submitting data:", submissionData);
+
+      if (!db) {
+        throw new Error(
+          "Firebase is not initialized. Please check your configuration."
         );
-
-        console.log("Form submitted successfully! Document ID:", docRef.id);
-        setShowSuccess(true);
-      } catch (error) {
-        console.error("Error submitting form:", error);
-        setSubmitError(
-          "There was an error submitting your form. Please try again."
-        );
-      } finally {
-        setIsSubmitting(false);
       }
+
+      const docRef = await addDoc(
+        collection(db, "submissions"),
+        submissionData
+      );
+      console.log("Submission successful! Document ID:", docRef.id);
+
+      setShowSuccess(true);
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        fitnessGoal: "",
+        fitnessGoalDetails: "",
+      });
+    } catch (err) {
+      console.error("Error submitting form:", err);
+      setSubmitError(err.message || "Failed to submit form. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
