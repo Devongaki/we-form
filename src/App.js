@@ -194,13 +194,15 @@ function App() {
       console.log("Submission successful! Document ID:", docRef.id);
 
       setShowSuccess(true);
-      setFormData({
+      // Don't clear the form data until user leaves or refreshes
+      // This ensures the success screen can display the selected goal
+      /*setFormData({
         name: "",
         email: "",
         phone: "",
         fitnessGoal: "",
         fitnessGoalDetails: "",
-      });
+      });*/
     } catch (err) {
       console.error("Error submitting form:", err);
       setSubmitError(
@@ -468,6 +470,10 @@ function App() {
   );
 
   if (showSuccess) {
+    const selectedGoal = fitnessGoals.find(
+      (goal) => goal.id === formData.fitnessGoal
+    );
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 relative overflow-hidden">
         <Confetti
@@ -486,7 +492,7 @@ function App() {
                 </span>
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Welcome to the WE Fitness Team!
+                Welcome to WE Online Coaching!
               </h2>
               <p className="text-gray-600 mb-8">
                 Congratulations {formData.name}! 🎉 We're excited to have you
@@ -495,16 +501,24 @@ function App() {
               </p>
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-blue-800 font-medium">
+                  <p className="text-blue-800 font-medium mb-2">
                     Your Selected Goal
                   </p>
-                  <p className="text-blue-600">
-                    {
-                      fitnessGoals.find(
-                        (goal) => goal.id === formData.fitnessGoal
-                      )?.title
-                    }
-                  </p>
+                  {selectedGoal ? (
+                    <>
+                      <div className="text-3xl mb-2">{selectedGoal.icon}</div>
+                      <p className="text-blue-600 font-semibold">
+                        {selectedGoal.title}
+                      </p>
+                      <p className="text-blue-500 mt-2 text-sm">
+                        {selectedGoal.description}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-blue-600">
+                      Goal information not available
+                    </p>
+                  )}
                 </div>
                 <p className="text-sm text-gray-500">
                   We'll be in touch shortly with your personalized fitness plan!
