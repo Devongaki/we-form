@@ -13,17 +13,39 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
-// Check if we have the minimum required configuration
-const hasRequiredConfig = firebaseConfig.apiKey && firebaseConfig.projectId;
+// Debug log to check environment variables
+console.log("Firebase Config:", {
+  projectId: firebaseConfig.projectId || "missing",
+  authDomain: firebaseConfig.authDomain || "missing",
+  storageBucket: firebaseConfig.storageBucket || "missing",
+  messagingSenderId: firebaseConfig.messagingSenderId || "missing",
+  appId: firebaseConfig.appId || "missing",
+  measurementId: firebaseConfig.measurementId || "missing",
+});
 
-// Initialize Firebase only if we have the required configuration
-const app = hasRequiredConfig ? initializeApp(firebaseConfig) : null;
-const db = hasRequiredConfig ? getFirestore(app) : null;
-
-// Initialize Analytics only if we're in a browser environment and have config
+let app = null;
+let db = null;
 let analytics = null;
-if (hasRequiredConfig && typeof window !== "undefined") {
-  isSupported().then((yes) => yes && (analytics = getAnalytics(app)));
+
+// Initialize Firebase only in browser environment
+if (typeof window !== "undefined") {
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+
+    // Initialize Analytics
+    isSupported()
+      .then((supported) => {
+        if (supported) {
+          analytics = getAnalytics(app);
+        }
+      })
+      .catch(console.error);
+
+    console.log("Firebase initialized successfully");
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
+  }
 }
 
 export { app, db, analytics };

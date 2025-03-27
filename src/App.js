@@ -175,9 +175,15 @@ function App() {
 
       console.log("Submitting data:", submissionData);
 
+      // Check if Firebase is initialized
       if (!db) {
+        console.error("Firebase DB is not initialized. Current db value:", db);
+        console.error("Current Firebase config:", {
+          projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+          authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+        });
         throw new Error(
-          "Firebase is not initialized. Please check your configuration."
+          "Unable to connect to the database. Please try again later."
         );
       }
 
@@ -197,7 +203,9 @@ function App() {
       });
     } catch (err) {
       console.error("Error submitting form:", err);
-      setSubmitError(err.message || "Failed to submit form. Please try again.");
+      setSubmitError(
+        "There was an error submitting your form. Please try again later."
+      );
     } finally {
       setIsSubmitting(false);
     }
