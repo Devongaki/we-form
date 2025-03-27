@@ -30,7 +30,7 @@ const LandingPage = ({ onStart }) => {
             </div>
 
             <h1 className="text-4xl font-bold text-white mb-4">
-              Transform Your Life with WE Fitness
+              Transform Your Life with WE Online Coaching
             </h1>
             <p className="text-blue-100 mb-8 text-lg">
               Join our community and achieve your fitness goals with
