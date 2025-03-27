@@ -3,7 +3,11 @@ import InputMask from "react-input-mask";
 import LandingPage from "./components/LandingPage";
 import Confetti from "react-confetti";
 import { db } from "./firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc } from "firebase/firestore";
+import "./App.css";
+import Form from "./components/Form";
+import SuccessScreen from "./components/SuccessScreen";
+import confetti from "canvas-confetti";
 
 function App() {
   const [showForm, setShowForm] = useState(false);
