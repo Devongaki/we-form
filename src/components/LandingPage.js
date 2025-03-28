@@ -30,11 +30,13 @@ const LandingPage = ({ onStart }) => {
             </div>
 
             <h1 className="text-4xl font-bold text-white mb-4">
-              Transform Your Life with WE Online Coaching
+              WE Online Coaching
             </h1>
             <p className="text-blue-100 mb-8 text-lg">
-              Join our community and achieve your fitness goals with
-              personalized training programs
+              Ready to transform?
+              <br />
+              Personalized programs to achieve your goals! Fill out the form,
+              and we’ll reach out shortly!
             </p>
 
             {/* Features */}
@@ -49,11 +51,11 @@ const LandingPage = ({ onStart }) => {
               </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10">
                 <span className="text-2xl mb-2">👥</span>
-                <p className="text-white text-sm">Expert Trainers</p>
+                <p className="text-white text-sm">Dedicated Coaches</p>
               </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10">
                 <span className="text-2xl mb-2">🌟</span>
-                <p className="text-white text-sm">Premium Workouts</p>
+                <p className="text-white text-sm">Tailored Programs </p>
               </div>
             </div>
 
@@ -61,13 +63,13 @@ const LandingPage = ({ onStart }) => {
               onClick={onStart}
               className="w-full px-6 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-300 transform hover:scale-105 shadow-lg"
             >
-              Start Your Journey Now
+              Get Started Today!
             </button>
 
             {/* Social proof */}
-            <p className="mt-6 text-blue-100 text-sm">
+            {/* <p className="mt-6 text-blue-100 text-sm">
               Join 10,000+ members who have transformed their lives
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
