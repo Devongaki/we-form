@@ -112,28 +112,19 @@ function App() {
 
   const fitnessGoals = [
     {
-      id: "lose-weight",
-      title: "Lose Weight",
-      icon: "🏃‍♂️",
-      description: "Shed pounds and feel confident",
+      id: "weight-loss",
+      title: "Weight Loss",
+      icon: "🏋🏻",
     },
     {
-      id: "build-muscle",
-      title: "Build Muscle",
-      icon: "💪",
-      description: "Gain strength and definition",
+      id: "muscle-growth",
+      title: "Muscle Growth",
+      icon: "💪🏾",
     },
     {
-      id: "increase-stamina",
-      title: "Increase Stamina",
-      icon: "⚡",
-      description: "Boost your endurance",
-    },
-    {
-      id: "improve-health",
-      title: "Improve Overall Health",
+      id: "strength-training",
+      title: "Strength Training",
       icon: "❤️",
-      description: "Feel better every day",
     },
   ];
 
@@ -255,10 +246,7 @@ function App() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-white mb-2">
-                Welcome to WE Fitness
-              </h3>
-              <p className="text-blue-100">Let's start with your name</p>
+              <h3 className="text-2xl font-bold text-white mb-2">Welcome!</h3>
             </div>
             <div>
               <label
@@ -380,7 +368,7 @@ function App() {
               </h3>
               <p className="text-blue-100">What do you want to achieve?</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col space-y-4">
               {fitnessGoals.map((goal) => (
                 <button
                   key={goal.id}
@@ -388,17 +376,14 @@ function App() {
                   onClick={() =>
                     setFormData((prev) => ({ ...prev, fitnessGoal: goal.id }))
                   }
-                  className={`p-4 rounded-xl border-2 text-center transition-all transform hover:scale-105 ${
+                  className={`p-6 rounded-xl border-2 text-center transition-all transform hover:scale-102 flex items-center space-x-4 ${
                     formData.fitnessGoal === goal.id
                       ? "border-blue-400 bg-blue-600/20 text-white"
                       : "border-white/10 hover:border-blue-400/50 text-white"
                   }`}
                 >
-                  <span className="text-2xl mb-2 block">{goal.icon}</span>
-                  <span className="font-medium block">{goal.title}</span>
-                  <span className="text-sm text-blue-100 mt-1 block">
-                    {goal.description}
-                  </span>
+                  <span className="text-3xl">{goal.icon}</span>
+                  <span className="font-medium text-lg">{goal.title}</span>
                 </button>
               ))}
             </div>
@@ -509,9 +494,6 @@ function App() {
                       <div className="text-3xl mb-2">{selectedGoal.icon}</div>
                       <p className="text-blue-600 font-semibold">
                         {selectedGoal.title}
-                      </p>
-                      <p className="text-blue-500 mt-2 text-sm">
-                        {selectedGoal.description}
                       </p>
                     </>
                   ) : (
