@@ -477,18 +477,14 @@ function App() {
                 </span>
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Welcome to WE Online Coaching!
+                Congratulations {formData.name}! 🎉
               </h2>
               <p className="text-gray-600 mb-8">
-                Congratulations {formData.name}! 🎉 We're excited to have you
-                join our fitness community. Get ready to transform your life and
-                achieve your fitness goals!
+                We're excited to have you join our community. Get ready to
+                transform your life and achieve your goals!
               </p>
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-blue-800 font-medium mb-2">
-                    Your Selected Goal
-                  </p>
                   {selectedGoal ? (
                     <>
                       <div className="text-3xl mb-2">{selectedGoal.icon}</div>
@@ -502,9 +498,7 @@ function App() {
                     </p>
                   )}
                 </div>
-                <p className="text-sm text-gray-500">
-                  We'll be in touch shortly with your personalized fitness plan!
-                </p>
+                <p className="text-sm text-gray-500">WE'll chat soon!</p>
               </div>
             </div>
           </div>
